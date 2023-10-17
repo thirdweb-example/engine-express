@@ -1,0 +1,12 @@
+{
+  "name": "engine-express",
+  "repository": "https://github.com/thirdweb-example/thirdweb-auth-express.git",
+  "license": "Apache-2.0",
+  "scripts": {
+    "client": "cd client && npm run dev",
+    "server": "cd server && npm run dev"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6"
+  }
+}
