@@ -3,6 +3,7 @@ import { PrivateKeyWallet } from "@thirdweb-dev/auth/evm";
 import { config } from "dotenv";
 import express from "express";
 import cors from "cors";
+import axios from "axios";
 
 config();
 
@@ -146,6 +147,8 @@ app.post("/register", (req, res) => {
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
+  console.log("login", username, password);
+
   // Simple validation
   if (!username || !password) {
     return res
@@ -168,37 +171,31 @@ app.post("/login", async (req, res) => {
     .json({ message: "Login successful", ethAddress: user.ethAddress });
 });
 
-app.post("/claim-erc20", authMiddleware, async (req, res) => {
+app.post("/claim-erc20", async (req, res) => {
+  const { walletAddress, chain, contractAddress, amount } = req.body;
+
+  const ENGINE_URL = "http://localhost:3005";
+  const BACKEND_WALLET = "0x41252d22CdB26E3207689D077FB3c535FB57a133";
+
   try {
-    // Retrieve the wallet information from the user's session.
-    const wallet = await getUser(req);
+    const url = `${ENGINE_URL}/contract/${chain}/${contractAddress}/erc20/claim-to`;
 
-    if (!wallet) {
-      return res.status(401).json({ message: "Unauthorized access." });
-    }
+    const headers = {
+      "x-backend-wallet-address": BACKEND_WALLET,
+      Authorization: `Bearer ${process.env.THIRDWEB_API_SECRET_KEY}`,
+    };
 
-    // Retrieve the username from the request body.
-    const { username } = req.body;
+    const body = {
+      recipient: walletAddress,
+      amount: amount,
+    };
 
-    if (!username) {
-      return res.status(400).json({ message: "Username is required." });
-    }
+    const response = await axios.post(url, body, { headers: headers });
 
-    // Find the corresponding user in your "database" (the 'users' object).
-    if (!users[username]) {
-      // Error handling if the user does not exist in 'users'
-      return res.status(400).json({ message: "User does not exist." });
-    }
-
-    // Check if the user has already claimed the ERC20 token
-    if (users[username].claimed) {
-      return res
-        .status(400)
-        .json({ message: "User has already claimed the ERC20 token." });
-    }
+    res.json(response.data);
   } catch (error) {
-    console.error("An error occurred while claiming ERC20 token: ", error);
-    res.status(500).json({ message: "Internal Server Error." });
+    console.error(error);
+    res.status(400).json({ message: "Error claiming ERC20" });
   }
 });
 
