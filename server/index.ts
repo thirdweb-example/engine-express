@@ -230,12 +230,7 @@ app.post("/get-erc20-balance", async (req, res) => {
       Authorization: `Bearer ${process.env.THIRDWEB_API_SECRET_KEY}`,
     };
 
-    const body = {
-      recipient: user.ethAddress,
-      amount: 1,
-    };
-
-    const response = await axios.post(url, body, { headers: headers });
+    const response = await axios.get(url, { headers: headers });
 
     // "result": {
 
@@ -249,7 +244,7 @@ app.post("/get-erc20-balance", async (req, res) => {
     res.json(response.data);
   } catch (error) {
     console.error(error);
-    res.status(400).json({ message: "Error claiming ERC20" });
+    res.status(400).json({ message: "Error retrieving ERC20 balance" });
   }
 });
 
