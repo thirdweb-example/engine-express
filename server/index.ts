@@ -4,11 +4,16 @@ import { config } from "dotenv";
 import express from "express";
 import cors from "cors";
 import axios from "axios";
+import { randomUUID } from "crypto";
 
 config();
 
 const app = express();
 const PORT = 8000;
+const ENGINE_URL = "http://localhost:3005";
+const BACKEND_WALLET = "0x41252d22CdB26E3207689D077FB3c535FB57a133";
+const ERC20_CONTRACT = "0x450b943729Ddba196Ab58b589Cea545551DF71CC";
+const CHAIN = 5;
 
 // NOTE: This users map is for demo purposes. Its used to show the power of
 // what you can accomplish with the Auth callbacks. In a production app,
@@ -16,6 +21,7 @@ const PORT = 8000;
 // on-chain.
 const wallets: Record<string, any> = {};
 const users: Record<string, any> = {};
+const userTokens: Record<string, any> = {};
 
 const { authRouter, authMiddleware, getUser } = ThirdwebAuth({
   domain: process.env.THIRDWEB_AUTH_DOMAIN || "",
@@ -166,19 +172,27 @@ app.post("/login", async (req, res) => {
   // You might want to return a token here (e.g., a JWT) for the frontend to use and authenticate further requests
   // However, that's dependent on how authentication is managed in your overall application.
 
-  res
-    .status(200)
-    .json({ message: "Login successful", ethAddress: user.ethAddress });
+  const uuid = randomUUID();
+  userTokens[uuid] = user;
+
+  res.status(200).json({
+    message: "Login successful",
+    ethAddress: user.ethAddress,
+    authToken: uuid,
+  });
 });
 
 app.post("/claim-erc20", async (req, res) => {
-  const { walletAddress, chain, contractAddress, amount } = req.body;
+  const { authToken } = req.body;
 
-  const ENGINE_URL = "http://localhost:3005";
-  const BACKEND_WALLET = "0x41252d22CdB26E3207689D077FB3c535FB57a133";
+  if (!authToken || !userTokens[authToken]) {
+    return res.status(400).json({ message: "Invalid auth token" });
+  }
+
+  const user = userTokens[authToken];
 
   try {
-    const url = `${ENGINE_URL}/contract/${chain}/${contractAddress}/erc20/claim-to`;
+    const url = `${ENGINE_URL}/contract/${CHAIN}/${ERC20_CONTRACT}/erc20/claim-to`;
 
     const headers = {
       "x-backend-wallet-address": BACKEND_WALLET,
@@ -186,11 +200,51 @@ app.post("/claim-erc20", async (req, res) => {
     };
 
     const body = {
-      recipient: walletAddress,
-      amount: amount,
+      recipient: user.ethAddress,
+      amount: 1,
     };
 
     const response = await axios.post(url, body, { headers: headers });
+
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ message: "Error claiming ERC20" });
+  }
+});
+
+app.post("/get-erc20-balance", async (req, res) => {
+  const { authToken } = req.body;
+
+  if (!authToken || !userTokens[authToken]) {
+    return res.status(400).json({ message: "Invalid auth token" });
+  }
+
+  const user = userTokens[authToken];
+
+  try {
+    const url = `${ENGINE_URL}/contract/${CHAIN}/${ERC20_CONTRACT}/erc20/balance-of?wallet_address=${user.ethAddress}`;
+
+    const headers = {
+      "x-backend-wallet-address": BACKEND_WALLET,
+      Authorization: `Bearer ${process.env.THIRDWEB_API_SECRET_KEY}`,
+    };
+
+    const body = {
+      recipient: user.ethAddress,
+      amount: 1,
+    };
+
+    const response = await axios.post(url, body, { headers: headers });
+
+    // "result": {
+
+    //   "name": "ERC20",
+    //   "symbol": "",
+    //   "decimals": "18",
+    //   "value": "7799999999615999974",
+    //   "displayValue": "7.799999999615999974"
+    // }
 
     res.json(response.data);
   } catch (error) {
