@@ -5,6 +5,7 @@ import {
   useLogin,
   useLogout,
   useMetamask,
+  ConnectWallet,
 } from "@thirdweb-dev/react";
 import type { NextPage } from "next";
 
@@ -20,8 +21,6 @@ const Home: NextPage = () => {
   const [userMessage, setUserMessage] = useState("");
   const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
 
-  const address = useAddress();
-  const connect = useMetamask();
   const { login } = useLogin();
   const { logout } = useLogout();
   const { user, isLoggedIn } = useUser();
@@ -150,7 +149,12 @@ const Home: NextPage = () => {
               Wallet Linked: {(user.data as unknown as UserData).ethAddress}
             </pre>
           ) : (
-            <button onClick={handleLinkWallet}>Link Wallet</button>
+            <ConnectWallet
+              btnTitle="Link Wallet"
+              auth={{
+                loginOptional: false,
+              }}
+            />
           )}
           <pre>User: {JSON.stringify(user, null, 2)}</pre>
         </>
@@ -160,4 +164,3 @@ const Home: NextPage = () => {
 };
 
 export default Home;
-
