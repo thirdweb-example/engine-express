@@ -25,7 +25,7 @@ const Home: NextPage = () => {
   const { logout } = useLogout();
   const { user, isLoggedIn } = useUser();
 
-  const SERVER_URL = "http://localhost:8000";
+  const SERVER_URL = `http://localhost:8000`;
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -70,7 +70,7 @@ const Home: NextPage = () => {
   const handleRegister = async () => {
     try {
       // Send request to the server to register the user
-      const res = await fetch("${SERVER_URL}/user/register", {
+      const res = await fetch(`${SERVER_URL}/user/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }), // sending username and password
