@@ -70,7 +70,7 @@ const Home: NextPage = () => {
   const handleRegister = async () => {
     try {
       // Send request to the server to register the user
-      const res = await fetch(`${SERVER_URL}/user/register`, {
+      const res = await fetch("${SERVER_URL}/user/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }), // sending username and password
@@ -86,6 +86,29 @@ const Home: NextPage = () => {
 
       setUserMessage("Registration successful! You may now log in.");
       setIsUserLoggedIn(true);
+    } catch (error: any) {
+      setUserMessage(error.message);
+    }
+  };
+
+  const handleLinkWallet = async (token: string) => {
+    try {
+      // Sending a request to the backend to link the wallet with the username
+      const res = await fetch(`${SERVER_URL}/user/link-wallet`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ username }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(
+          data.message || "Something went wrong while linking the wallet."
+        );
+      }
+      setUserMessage("Wallet linked successfully!");
     } catch (error: any) {
       setUserMessage(error.message);
     }
@@ -124,6 +147,7 @@ const Home: NextPage = () => {
               btnTitle="Link Wallet"
               auth={{
                 loginOptional: false,
+                onLogin: handleLinkWallet,
               }}
             />
           )}

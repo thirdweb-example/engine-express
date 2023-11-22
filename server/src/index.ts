@@ -50,7 +50,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/auth", authRouter);
-app.use("/user", userRoutes);
+app.use("/user", authMiddleware, userRoutes);
 app.use("/engine", engineRoutes);
 
 app.listen(PORT, () => {

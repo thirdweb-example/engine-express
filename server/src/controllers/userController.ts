@@ -2,8 +2,14 @@ import { Request, Response } from "express";
 import { randomUUID } from "crypto";
 import { getUser } from "../index";
 
-export const users: Record<string, any> = {};
-export const userTokens: Record<string, any> = {};
+interface UserData {
+  username: string;
+  password: string;
+  ethAddress: string;
+}
+
+export const users: Record<string, UserData> = {};
+export const userTokens: Record<string, UserData> = {};
 
 export const registerUser = async (req: Request, res: Response) => {
   const { username, password } = req.body;
