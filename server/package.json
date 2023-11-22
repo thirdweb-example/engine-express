@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "npx ts-node index.ts"
+    "dev": "yarn ts-node src/index.ts"
   },
   "devDependencies": {
     "@types/cors": "^2.8.14",

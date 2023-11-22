@@ -25,6 +25,8 @@ const Home: NextPage = () => {
   const { logout } = useLogout();
   const { user, isLoggedIn } = useUser();
 
+  const SERVER_URL = "http://localhost:8000";
+
   useEffect(() => {
     if (isLoggedIn) {
       // Check if the user's Ethereum address is already linked
@@ -40,7 +42,7 @@ const Home: NextPage = () => {
   const handleLogin = async () => {
     try {
       // Attempt to login or register the user
-      const res = await fetch("http://localhost:8000/login", {
+      const res = await fetch(`${SERVER_URL}/user/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -65,40 +67,10 @@ const Home: NextPage = () => {
     setIsUserLoggedIn(false);
   };
 
-  const handleLinkWallet = async () => {
-    try {
-      await connect();
-      const token: string = await login();
-
-      // Sending a request to the backend to link the wallet with the username
-      const res = await fetch("http://localhost:8000/link-wallet", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ username }), // you are passing the username here
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(
-          data.message || "Something went wrong while linking the wallet."
-        );
-      }
-
-      setUserMessage("Wallet linked successfully!");
-    } catch (error: any) {
-      setUserMessage(error.message);
-    }
-  };
-
   const handleRegister = async () => {
     try {
       // Send request to the server to register the user
-      const res = await fetch("http://localhost:8000/register", {
-        // Assuming you'll create a "/register" endpoint
+      const res = await fetch(`${SERVER_URL}/user/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }), // sending username and password
@@ -113,8 +85,7 @@ const Home: NextPage = () => {
       }
 
       setUserMessage("Registration successful! You may now log in.");
-      // Here, you might want to follow up with automatic login or clear the input fields, etc.
-      setIsUserLoggedIn(true); // Set user as logged in for Web2
+      setIsUserLoggedIn(true);
     } catch (error: any) {
       setUserMessage(error.message);
     }
