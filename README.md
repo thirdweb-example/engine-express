@@ -37,7 +37,7 @@ Here’s a step by step guide to deploy your client/server:
 
 This part is simple, we have a template for you with a simple script to interact with your server as per the architecture above. A level blueprint instantiates the UI, which has its own blueprint to interact with your server. 
 
-Go ahead and clone https://github.com/thirdweb-dev/unreal_demo and head to `_Thirdweb/Scenes/Scene_Game` and start the level.
+Go ahead and clone https://github.com/thirdweb-example/unreal_demo and head to `_Thirdweb/Scenes/Scene_Game` and start the level.
 
 You should now be able to login and see the output as the game polls and updates your balance whenever you collect an item while driving.
 
