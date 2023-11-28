@@ -73,3 +73,22 @@ export const linkWallet = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal Server Error." });
   }
 };
+
+export const getUserData = async (req: Request, res: Response) => {
+  try {
+    const walletAddress = req.body.walletAddress;
+    if (!walletAddress) {
+      return res.status(400).json({ message: "Wallet address is required." });
+    }
+    const user = Object.values(users).find(
+      (user) => user.ethAddress === walletAddress
+    );
+    if (!user) {
+      return res.status(400).json({ message: "User does not exist." });
+    }
+    res.status(200).json({ message: "User data retrieved.", user });
+  } catch (error) {
+    console.error("An error occurred while getting user data: ", error);
+    res.status(500).json({ message: "Internal Server Error." });
+  }
+};
