@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+	font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+	font-feature-settings: 'rlig' 1, 'calt' 0;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+}
+
+html,
+body {
+	height: 100%;
+}
+
+@layer base {
+	:root {
+		--b-100: hsla(0, 0%, 100%, 1);
+		--b-200: hsla(0, 0%, 85%, 1);
+		--border: hsla(0, 0%, 7%, 1);
+		--f-900: hsla(221, 46%, 15%, 1);
+		--f-500: hsla(215, 10%, 44%, 1);
+		--f-200: hsla(220, 41%, 74%, 1);
+		--accent-500: hsla(209, 74%, 59%, 1);
+		--accent-200: hsla(209, 74%, 79%, 1);
+		--accent-600: hsla(231, 88%, 69%, 1);
+		--danger-500: hsl(0deg 84% 60%);
+		--radius: 0.5rem;
+		--header-height: 70px;
+	}
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-b-100 text-f-900;
+	}
+}
+
+button {
+	-webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+	background: var(--f-900);
+	color: var(--b-100);
+}
