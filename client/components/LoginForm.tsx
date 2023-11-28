@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import {
 	useUser,
-	useLogout,
 	ConnectWallet,
 	useConnectionStatus,
 	useLogin,
@@ -16,19 +15,13 @@ import { DynamicHeight } from './DynamicHeight';
 import { AlertCircleIcon } from 'lucide-react';
 import { Spinner } from './Spinner/Spinner';
 
-interface UserData {
-	username: string;
-	password: string;
-	ethAddress?: string;
-}
-
 const SERVER_URL = `http://localhost:8000`;
 
 export function LoginForm() {
 	const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
 	const [username, setUsername] = useState('');
 
-	const { user, isLoggedIn } = useUser();
+	const { user, isLoggedIn, isLoading } = useUser();
 
 	useEffect(() => {
 		if (isLoggedIn) {
@@ -48,23 +41,34 @@ export function LoginForm() {
 			}}
 		>
 			<DynamicHeight>
-				<div className='p-8'>
-					<div className='mb-4 flex justify-center text-accent-500'>
-						<FormIcon size={70} />
+				{isLoading ? (
+					<div
+						className='flex items-center justify-center'
+						style={{
+							minHeight: '400px',
+						}}
+					>
+						<Spinner className='h-10 w-10' />
 					</div>
+				) : (
+					<div className='p-8'>
+						<div className='mb-4 flex justify-center text-accent-500'>
+							<FormIcon size={70} />
+						</div>
 
-					{!isUserLoggedIn ? (
-						<LoginOrSignup
-							username={username}
-							setUsername={setUsername}
-							onLogin={() => {
-								setIsUserLoggedIn(true);
-							}}
-						/>
-					) : (
-						<LoggedIn onLogout={() => setIsUserLoggedIn(false)} username={username} />
-					)}
-				</div>
+						{!isUserLoggedIn ? (
+							<LoginOrSignup
+								username={username}
+								setUsername={setUsername}
+								onLogin={() => {
+									setIsUserLoggedIn(true);
+								}}
+							/>
+						) : (
+							<LoggedIn onLogout={() => setIsUserLoggedIn(false)} username={username} />
+						)}
+					</div>
+				)}
 			</DynamicHeight>
 		</form>
 	);
@@ -215,16 +219,13 @@ function LoginOrSignup(props: {
 }
 
 function LoggedIn(props: { onLogout: () => void; username: string }) {
-	const { logout } = useLogout();
-	const { user, isLoggedIn } = useUser();
+	const { user } = useUser();
 	const { isLoading: loginLoading, login } = useLogin();
 	const { username } = props;
 	const connectionStatus = useConnectionStatus();
-	const [status, setStatus] = useState<'idle' | 'loading' | { error: string }>('idle');
 	const disconnect = useDisconnect();
 
 	const handleLinkWallet = async (token: string) => {
-		setStatus('loading');
 		try {
 			// Sending a request to the backend to link the wallet with the username
 			const res = await fetch(`${SERVER_URL}/user/link-wallet`, {
@@ -241,7 +242,8 @@ function LoggedIn(props: { onLogout: () => void; username: string }) {
 			}
 			// setUserMessage('Wallet linked successfully!');
 		} catch (error: any) {
-			setStatus({ error: error.message });
+			console.error(error);
+			// setStatus({ error: error.message });
 		}
 	};
 
@@ -251,10 +253,12 @@ function LoggedIn(props: { onLogout: () => void; username: string }) {
 		props.onLogout();
 	};
 
-	const linkedWalletAddress = (user?.data as unknown as UserData)?.ethAddress;
+	// right now we are assuming that if the user is logged in, wallet is also linked
+	// TODO: fix this - add an endpoint that returns whether a wallet is linked or not
+	const linkedWalletAddress = user?.address;
 
 	if (linkedWalletAddress) {
-		return <WalletLinked address={linkedWalletAddress} />;
+		return <WalletLinked address={linkedWalletAddress} onLogout={props.onLogout} />;
 	}
 
 	return (
@@ -282,7 +286,6 @@ function LoggedIn(props: { onLogout: () => void; username: string }) {
 						className='w-full'
 						onClick={async () => {
 							const token = await login();
-							console.log(token);
 							if (typeof token === 'string') {
 								await handleLinkWallet(token);
 							} else {
@@ -299,17 +302,33 @@ function LoggedIn(props: { onLogout: () => void; username: string }) {
 				<div className='h-4' />
 
 				<Button className='w-full border-2 bg-b-100 text-f-900' onClick={handleLogout}>
-					Logout
+					Sign out
 				</Button>
 			</div>
 		</div>
 	);
 }
 
-function WalletLinked(props: { address: string }) {
+function WalletLinked(props: { address: string; onLogout: () => void }) {
+	const disconnect = useDisconnect();
+
+	const handleLogout = async (event: React.MouseEvent) => {
+		event.preventDefault();
+		await disconnect();
+		props.onLogout();
+	};
+
 	return (
 		<div>
-			<pre>Wallet Linked: {props.address}</pre>
+			<FormTitle>Wallet Linked</FormTitle>
+			<div className='h-5' />
+			<p className='font-decorative text-xl'>{props.address}</p>
+
+			<div className='h-5' />
+
+			<Button className='w-full border-2 bg-b-100 text-f-900' onClick={handleLogout}>
+				Sign out
+			</Button>
 		</div>
 	);
 }
@@ -371,4 +390,10 @@ function FlagIcon(props: { size: number }) {
 			</defs>
 		</svg>
 	);
+}
+
+export function shortenAddress(str: string, extraShort: boolean = true) {
+	return `${str.substring(0, extraShort ? 4 : 6)}...${str.substring(
+		str.length - (extraShort ? 3 : 4)
+	)}`;
 }
