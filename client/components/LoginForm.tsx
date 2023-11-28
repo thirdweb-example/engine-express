@@ -7,8 +7,8 @@ import {
 	ConnectWallet,
 	useConnectionStatus,
 	useLogin,
-	useDisconnect,
 	lightTheme,
+	useLogout,
 } from '@thirdweb-dev/react';
 import { Input } from '@/components/Input';
 import { Label } from './Label';
@@ -336,7 +336,8 @@ function LinkWallet(props: { onBack: () => void; username: string }) {
 }
 
 function WalletLinked(props: { address: string; onLogout: () => void }) {
-	const disconnect = useDisconnect();
+	const { logout } = useLogout();
+
 	const usernameQuery = useQuery({
 		queryKey: ['username', props.address],
 		queryFn: async () => {
@@ -358,7 +359,7 @@ function WalletLinked(props: { address: string; onLogout: () => void }) {
 
 	const handleLogout = async (event: React.MouseEvent) => {
 		event.preventDefault();
-		await disconnect();
+		await logout();
 		props.onLogout();
 	};
 
