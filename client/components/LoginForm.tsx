@@ -295,21 +295,7 @@ function LinkWallet(props: { onBack: () => void; username: string }) {
 					</>
 				)}
 
-				<ConnectWallet
-					className={cn(
-						'!w-full !rounded-lg',
-						connectionStatus === 'disconnected' && '!font-decorative !text-2xl',
-						connectionStatus === 'connected' && '!border-[1.5px] '
-					)}
-					auth={{
-						loginOptional: true,
-					}}
-					theme={lightTheme({
-						colors: {
-							borderColor: 'var(--border)',
-						},
-					})}
-				/>
+				<CustomConnectWallet />
 
 				{connectionStatus === 'connected' && (
 					<>
@@ -379,15 +365,18 @@ function WalletLinked(props: { address: string; onLogout: () => void }) {
 	return (
 		<div>
 			<FormTitle>{usernameQuery.data || ''}</FormTitle>
-			<div className='h-5' />
+			<div className='h-3' />
+			<div className='flex justify-center'>
+				<Button variant='link' onClick={handleLogout} className='font-semibold'>
+					Sign out
+				</Button>
+			</div>
 
-			<p className='font-decorative text-xl'>{props.address}</p>
+			<div className='h-10' />
 
-			<div className='h-5' />
-
-			<Button className='w-full border-2 bg-b-100 text-f-900' onClick={handleLogout}>
-				Sign out
-			</Button>
+			<p className='rounded-lg border-[1.5px] p-4 text-center font-decorative text-xl'>
+				{props.address}
+			</p>
 		</div>
 	);
 }
@@ -455,4 +444,25 @@ export function shortenAddress(str: string, extraShort: boolean = true) {
 	return `${str.substring(0, extraShort ? 4 : 6)}...${str.substring(
 		str.length - (extraShort ? 3 : 4)
 	)}`;
+}
+
+function CustomConnectWallet() {
+	const connectionStatus = useConnectionStatus();
+	return (
+		<ConnectWallet
+			className={cn(
+				'!w-full !rounded-lg',
+				connectionStatus === 'disconnected' && '!font-decorative !text-2xl',
+				connectionStatus === 'connected' && '!border-[1.5px] '
+			)}
+			auth={{
+				loginOptional: true,
+			}}
+			theme={lightTheme({
+				colors: {
+					borderColor: 'var(--border)',
+				},
+			})}
+		/>
+	);
 }
