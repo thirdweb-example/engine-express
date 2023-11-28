@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "@thirdweb-dev/auth": "^4",
-    "@thirdweb-dev/react": "^4",
-    "@thirdweb-dev/sdk": "^4",
+    "@thirdweb-dev/react": "^4.1.11-nightly-94559129-20231128160905",
+    "@thirdweb-dev/sdk": "^4.0.18-nightly-94559129-20231128160905",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "dotenv": "^16.0.1",
