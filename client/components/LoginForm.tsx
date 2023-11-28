@@ -1,33 +1,42 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
 	useUser,
 	ConnectWallet,
 	useConnectionStatus,
 	useLogin,
 	useDisconnect,
+	lightTheme,
 } from '@thirdweb-dev/react';
 import { Input } from '@/components/Input';
 import { Label } from './Label';
 import { Button } from './Button';
 import { DynamicHeight } from './DynamicHeight';
-import { AlertCircleIcon } from 'lucide-react';
+import { AlertCircleIcon, ArrowDownIcon, UserIcon, Link2Icon } from 'lucide-react';
 import { Spinner } from './Spinner/Spinner';
+import { cn } from '@/lib/utils';
 
 const SERVER_URL = `http://localhost:8000`;
 
+interface UserData {
+	username: string;
+	password: string;
+	ethAddress: string;
+}
+
 export function LoginForm() {
-	const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
 	const [username, setUsername] = useState('');
+	const [screen, setScreen] = useState<'unknown' | 'main' | 'link-wallet'>('unknown');
 
 	const { user, isLoggedIn, isLoading } = useUser();
 
 	useEffect(() => {
-		if (isLoggedIn) {
-			setIsUserLoggedIn(true);
+		if (!isLoading) {
+			setScreen(isLoggedIn ? 'link-wallet' : 'main');
 		}
-	}, [isLoggedIn, user]);
+	}, [isLoggedIn, user, isLoading]);
 
 	return (
 		<form
@@ -41,7 +50,7 @@ export function LoginForm() {
 			}}
 		>
 			<DynamicHeight>
-				{isLoading ? (
+				{screen === 'unknown' && (
 					<div
 						className='flex items-center justify-center'
 						style={{
@@ -50,22 +59,26 @@ export function LoginForm() {
 					>
 						<Spinner className='h-10 w-10' />
 					</div>
-				) : (
+				)}
+
+				{screen !== 'unknown' && (
 					<div className='p-8'>
 						<div className='mb-4 flex justify-center text-accent-500'>
 							<FormIcon size={70} />
 						</div>
 
-						{!isUserLoggedIn ? (
-							<LoginOrSignup
+						{screen === 'main' && (
+							<LoginOrSignupForm
 								username={username}
 								setUsername={setUsername}
-								onLogin={() => {
-									setIsUserLoggedIn(true);
+								onNext={() => {
+									setScreen('link-wallet');
 								}}
 							/>
-						) : (
-							<LoggedIn onLogout={() => setIsUserLoggedIn(false)} username={username} />
+						)}
+
+						{screen === 'link-wallet' && (
+							<LinkWallet onBack={() => setScreen('main')} username={username} />
 						)}
 					</div>
 				)}
@@ -74,10 +87,10 @@ export function LoginForm() {
 	);
 }
 
-function LoginOrSignup(props: {
-	onLogin: () => void;
+function LoginOrSignupForm(props: {
 	username: string;
 	setUsername: (username: string) => void;
+	onNext: () => void;
 }) {
 	const [password, setPassword] = useState('');
 	const [loginMode, setLoginMode] = useState<'login' | 'signup'>('signup');
@@ -99,7 +112,7 @@ function LoginOrSignup(props: {
 				throw new Error(data.message || 'Something went wrong during login/registration.');
 			}
 			// setUserMessage(data.message);
-			props.onLogin();
+			props.onNext();
 		} catch (error: any) {
 			setStatus({ error: error.message });
 		}
@@ -125,7 +138,7 @@ function LoginOrSignup(props: {
 			}
 
 			// setUserMessage('Registration successful! You may now log in.');
-			props.onLogin();
+			props.onNext();
 		} catch (error: any) {
 			setStatus({ error: error.message });
 			// setUserMessage(error.message);
@@ -218,12 +231,11 @@ function LoginOrSignup(props: {
 	);
 }
 
-function LoggedIn(props: { onLogout: () => void; username: string }) {
+function LinkWallet(props: { onBack: () => void; username: string }) {
 	const { user } = useUser();
 	const { isLoading: loginLoading, login } = useLogin();
 	const { username } = props;
 	const connectionStatus = useConnectionStatus();
-	const disconnect = useDisconnect();
 
 	const handleLinkWallet = async (token: string) => {
 		try {
@@ -247,70 +259,116 @@ function LoggedIn(props: { onLogout: () => void; username: string }) {
 		}
 	};
 
-	const handleLogout = async (event: React.MouseEvent) => {
-		event.preventDefault();
-		await disconnect();
-		props.onLogout();
-	};
-
 	// right now we are assuming that if the user is logged in, wallet is also linked
 	// TODO: fix this - add an endpoint that returns whether a wallet is linked or not
 	const linkedWalletAddress = user?.address;
 
-	if (linkedWalletAddress) {
-		return <WalletLinked address={linkedWalletAddress} onLogout={props.onLogout} />;
-	}
+	console.log('xxx', { connectionStatus });
 
-	return (
-		<div>
-			<FormTitle>Link a Web3 Wallet</FormTitle>
-			<div className='h-2' />
-			<p className='text-center font-medium text-f-500'>
-				This wallet will receive distributed game rewards.
-			</p>
+	if (!linkedWalletAddress) {
+		return (
+			<div>
+				<FormTitle>Link a Web3 Wallet</FormTitle>
+				<div className='h-2' />
+				<p className='text-center font-medium text-f-500'>
+					This wallet will receive distributed game rewards.
+				</p>
 
-			<div className='h-10' />
-
-			<div className='flex flex-col items-center'>
-				{connectionStatus !== 'connected' && (
-					<ConnectWallet
-						className='!w-full !bg-f-900 !font-decorative !text-2xl font-semibold !text-b-100'
-						auth={{
-							loginOptional: true,
-						}}
-					/>
-				)}
+				<div className='h-10' />
 
 				{connectionStatus === 'connected' && (
-					<Button
-						className='w-full'
-						onClick={async () => {
-							const token = await login();
-							if (typeof token === 'string') {
-								await handleLinkWallet(token);
-							} else {
-								console.error('Token is not a string');
-								console.log(token);
-							}
-						}}
-					>
-						{loginLoading && <Spinner className='h-6 w-6' />}
-						{loginLoading ? 'Linking Wallet' : 'Link Wallet'}
-					</Button>
+					<>
+						<div className='flex items-center gap-3 rounded-lg border-[1.5px] px-4 py-3'>
+							<UserIcon className='h-6 w-6' />
+							<div>
+								<p className='font-decorative font-semibold tracking-wider text-f-500'>Username</p>
+								<p className='font-decorative text-lg font-semibold tracking-wider text-f-900'>
+									{username}
+								</p>
+							</div>
+						</div>
+						<div className='h-4' />
+						<div className='flex justify-center'>
+							<ArrowDownIcon className='h-6 w-6' />
+						</div>
+						<div className='h-4' />
+					</>
+				)}
+
+				<ConnectWallet
+					className={cn(
+						'!w-full !rounded-lg',
+						connectionStatus === 'disconnected' && '!font-decorative !text-2xl',
+						connectionStatus === 'connected' && '!border-[1.5px] '
+					)}
+					auth={{
+						loginOptional: true,
+					}}
+					theme={lightTheme({
+						colors: {
+							borderColor: 'var(--border)',
+						},
+					})}
+				/>
+
+				{connectionStatus === 'connected' && (
+					<>
+						<div className='h-10' />
+
+						<Button
+							className='w-full'
+							onClick={async () => {
+								const token = await login();
+								if (typeof token === 'string') {
+									await handleLinkWallet(token);
+								} else {
+									console.error('Token is not a string');
+									console.log(token);
+								}
+							}}
+						>
+							{loginLoading ? (
+								<Spinner className='h-6 w-6' />
+							) : (
+								<Link2Icon className='h-6 w-6 rotate-90' />
+							)}
+							{loginLoading ? 'Linking Wallet' : 'Link Wallet'}
+						</Button>
+					</>
 				)}
 
 				<div className='h-4' />
 
-				<Button className='w-full border-2 bg-b-100 text-f-900' onClick={handleLogout}>
-					Sign out
+				<Button className='w-full border-2 bg-b-100 text-f-900' onClick={props.onBack}>
+					Back
 				</Button>
 			</div>
-		</div>
-	);
+		);
+	}
+
+	return <WalletLinked address={linkedWalletAddress} onLogout={props.onBack} />;
 }
 
 function WalletLinked(props: { address: string; onLogout: () => void }) {
 	const disconnect = useDisconnect();
+	const usernameQuery = useQuery({
+		queryKey: ['username', props.address],
+		queryFn: async () => {
+			const res = await fetch(`${SERVER_URL}/user/get-user-data`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ walletAddress: props.address }),
+			});
+			console.log(res);
+			const user = (await res.json()).user as UserData | undefined;
+			if (user) {
+				return user.username;
+			}
+			return null;
+		},
+	});
 
 	const handleLogout = async (event: React.MouseEvent) => {
 		event.preventDefault();
@@ -320,8 +378,9 @@ function WalletLinked(props: { address: string; onLogout: () => void }) {
 
 	return (
 		<div>
-			<FormTitle>Wallet Linked</FormTitle>
+			<FormTitle>{usernameQuery.data || ''}</FormTitle>
 			<div className='h-5' />
+
 			<p className='font-decorative text-xl'>{props.address}</p>
 
 			<div className='h-5' />
