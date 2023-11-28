@@ -11,17 +11,29 @@
     "@thirdweb-dev/auth": "^4",
     "@thirdweb-dev/react": "^4",
     "@thirdweb-dev/sdk": "^4",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.0.0",
     "dotenv": "^16.0.1",
     "ethers": "^5.6.8",
-    "next": "^12.1.6",
+    "lucide-react": "^0.293.0",
+    "next": "^14.0.3",
+    "nextjs-toploader": "^1.6.4",
     "react": "^18.1.0",
-    "react-dom": "^18.1.0"
+    "react-dom": "^18.1.0",
+    "tailwind-merge": "^2.0.0",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@types/node": "^17.0.35",
     "@types/react": "^17.0.45",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "autoprefixer": "^10.4.16",
     "eslint": "^8.16.0",
-    "eslint-config-next": "^12.1.6",
+    "eslint-config-next": "^14.0.3",
+    "eslint-plugin-tailwindcss": "^3.13.0",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.5",
     "typescript": "^4.7.2"
   }
 }
