@@ -27,7 +27,7 @@ Here’s a step by step guide to deploy your client/server:
 3. Install server dependencies `cd server` and `yarn`
 4. Head back into the root folder and `yarn`
 5. Replace the `.env.example` in the client/server folder with your own [api key](http://thirdweb.com/create-api-key) values and engine url - make sure your api key can be used to authenticate with your deployed engine
-6. We’ll be claiming ERC20’s from Unreal in this demo, so head to the [engineController.ts](https://github.com/thirdweb-example/engine-express/blob/main/server/src/controllers/engineController.ts) file, and set your backend engine wallet as well as your [Token Drop](https://thirdweb.com/thirdweb.eth/DropERC20) contract details - make sure you have claim conditions set up for your drop
+6. We’ll be claiming ERC20’s from Unreal in this demo, so head to the [engineController.ts](https://github.com/thirdweb-example/engine-express/blob/main/server/src/controllers/engineController.ts) file, and set your backend engine wallet (make sure it has funds) as well as your [Token Drop](https://thirdweb.com/thirdweb.eth/DropERC20) contract details - make sure you have claim conditions set up for your drop
 7. You can now run the client and server in two terminals using `yarn client` and `yarn server`
 8. By default, the client runs on [localhost:3000](http://localhost:3000) and the server on [localhost:8000](http://localhost:8000)
 9. Go ahead and create a user on your website, and link a wallet
