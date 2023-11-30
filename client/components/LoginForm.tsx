@@ -26,17 +26,60 @@ interface UserData {
 	ethAddress: string;
 }
 
+function CustomConnectWallet() {
+	const connectionStatus = useConnectionStatus();
+	return (
+		<ConnectWallet
+			className={cn(
+				'!w-full !rounded-lg',
+				connectionStatus === 'disconnected' && '!font-decorative !text-2xl',
+				connectionStatus === 'connected' && '!border-[1.5px] '
+			)}
+			auth={{
+				loginOptional: true,
+			}}
+			theme={lightTheme({
+				colors: {
+					borderColor: 'var(--border)',
+				},
+			})}
+		/>
+	);
+}
+
 export function LoginForm() {
 	const [username, setUsername] = useState('');
-	const [screen, setScreen] = useState<'unknown' | 'main' | 'link-wallet'>('unknown');
 
-	const { user, isLoggedIn, isLoading } = useUser();
+	// user can be logged in already or not on pageload, so we start with "unknown" status
+	const [screen, setScreen] = useState<'unknown' | 'main' | 'link-wallet' | 'wallet-linked'>(
+		'unknown'
+	);
+
+	const { user, isLoading } = useUser();
+	const userDataQuery = useGetUserDataForWalletAddress(user?.address);
+	const userDataLoading = userDataQuery.isLoading;
+	const userDataAddress = userDataQuery.data?.ethAddress;
 
 	useEffect(() => {
 		if (!isLoading) {
-			setScreen(isLoggedIn ? 'link-wallet' : 'main');
+			// if user is logged in
+			if (user) {
+				if (!userDataLoading) {
+					// if logged-in user's wallet is linked
+					if (userDataAddress) {
+						setScreen('wallet-linked');
+					} else {
+						setScreen('link-wallet');
+					}
+				}
+			}
+
+			// if user is not logged in
+			else {
+				setScreen('main');
+			}
 		}
-	}, [isLoggedIn, user, isLoading]);
+	}, [user, isLoading, userDataLoading, userDataAddress]);
 
 	return (
 		<form
@@ -50,18 +93,16 @@ export function LoginForm() {
 			}}
 		>
 			<DynamicHeight>
-				{screen === 'unknown' && (
+				{screen === 'unknown' ? (
 					<div
 						className='flex items-center justify-center'
 						style={{
-							minHeight: '400px',
+							minHeight: '500px',
 						}}
 					>
 						<Spinner className='h-10 w-10' />
 					</div>
-				)}
-
-				{screen !== 'unknown' && (
+				) : (
 					<div className='p-8'>
 						<div className='mb-4 flex justify-center text-accent-500'>
 							<FormIcon size={70} />
@@ -80,6 +121,10 @@ export function LoginForm() {
 						{screen === 'link-wallet' && (
 							<LinkWallet onBack={() => setScreen('main')} username={username} />
 						)}
+
+						{screen === 'wallet-linked' && userDataAddress && (
+							<WalletLinked address={userDataAddress} />
+						)}
 					</div>
 				)}
 			</DynamicHeight>
@@ -87,6 +132,9 @@ export function LoginForm() {
 	);
 }
 
+/**
+ * login or signup with given username and password
+ */
 function LoginOrSignupForm(props: {
 	username: string;
 	setUsername: (username: string) => void;
@@ -231,8 +279,10 @@ function LoginOrSignupForm(props: {
 	);
 }
 
+/**
+ * link wallet to given username
+ */
 function LinkWallet(props: { onBack: () => void; username: string }) {
-	const { user } = useUser();
 	const { isLoading: loginLoading, login } = useLogin();
 	const { username } = props;
 	const connectionStatus = useConnectionStatus();
@@ -259,113 +309,90 @@ function LinkWallet(props: { onBack: () => void; username: string }) {
 		}
 	};
 
-	// right now we are assuming that if the user is logged in, wallet is also linked
-	// TODO: fix this - add an endpoint that returns whether a wallet is linked or not
-	const linkedWalletAddress = user?.address;
+	return (
+		<div>
+			<FormTitle>Link a Web3 Wallet</FormTitle>
+			<div className='h-2' />
+			<p className='text-center font-medium text-f-500'>
+				This wallet will receive distributed game rewards.
+			</p>
 
-	console.log('xxx', { connectionStatus });
+			<div className='h-10' />
 
-	if (!linkedWalletAddress) {
-		return (
-			<div>
-				<FormTitle>Link a Web3 Wallet</FormTitle>
-				<div className='h-2' />
-				<p className='text-center font-medium text-f-500'>
-					This wallet will receive distributed game rewards.
-				</p>
-
-				<div className='h-10' />
-
-				{connectionStatus === 'connected' && (
-					<>
-						<div className='flex items-center gap-3 rounded-lg border-[1.5px] px-4 py-3'>
-							<UserIcon className='h-6 w-6' />
-							<div>
-								<p className='font-decorative font-semibold tracking-wider text-f-500'>Username</p>
-								<p className='font-decorative text-lg font-semibold tracking-wider text-f-900'>
-									{username}
-								</p>
-							</div>
+			{connectionStatus === 'connected' && (
+				<>
+					<div className='flex items-center gap-3 rounded-lg border-[1.5px] px-4 py-3'>
+						<UserIcon className='h-6 w-6' />
+						<div>
+							<p className='font-decorative font-semibold tracking-wider text-f-500'>Username</p>
+							<p className='font-decorative text-lg font-semibold tracking-wider text-f-900'>
+								{username}
+							</p>
 						</div>
-						<div className='h-4' />
-						<div className='flex justify-center'>
-							<ArrowDownIcon className='h-6 w-6' />
-						</div>
-						<div className='h-4' />
-					</>
-				)}
+					</div>
+					<div className='h-4' />
+					<div className='flex justify-center'>
+						<ArrowDownIcon className='h-6 w-6' />
+					</div>
+					<div className='h-4' />
+				</>
+			)}
 
-				<CustomConnectWallet />
+			<CustomConnectWallet />
 
-				{connectionStatus === 'connected' && (
-					<>
-						<div className='h-10' />
+			{connectionStatus === 'connected' && (
+				<>
+					<div className='h-10' />
 
-						<Button
-							className='w-full'
-							onClick={async () => {
-								const token = await login();
-								if (typeof token === 'string') {
-									await handleLinkWallet(token);
-								} else {
-									console.error('Token is not a string');
-									console.log(token);
-								}
-							}}
-						>
-							{loginLoading ? (
-								<Spinner className='h-6 w-6' />
-							) : (
-								<Link2Icon className='h-6 w-6 rotate-90' />
-							)}
-							{loginLoading ? 'Linking Wallet' : 'Link Wallet'}
-						</Button>
-					</>
-				)}
+					<Button
+						className='w-full'
+						onClick={async () => {
+							const token = await login();
+							if (typeof token === 'string') {
+								await handleLinkWallet(token);
+							} else {
+								console.error('Token is not a string');
+								console.log(token);
+							}
+						}}
+					>
+						{loginLoading ? (
+							<Spinner className='h-6 w-6' />
+						) : (
+							<Link2Icon className='h-6 w-6 rotate-90' />
+						)}
+						{loginLoading ? 'Linking Wallet' : 'Link Wallet'}
+					</Button>
+				</>
+			)}
 
-				<div className='h-4' />
+			<div className='h-4' />
 
-				<Button className='w-full border-2 bg-b-100 text-f-900' onClick={props.onBack}>
-					Back
-				</Button>
-			</div>
-		);
-	}
-
-	return <WalletLinked address={linkedWalletAddress} onLogout={props.onBack} />;
+			<Button className='w-full border-2 bg-b-100 text-f-900' onClick={props.onBack}>
+				Back
+			</Button>
+		</div>
+	);
 }
 
-function WalletLinked(props: { address: string; onLogout: () => void }) {
+/**
+ * link a wallet to username
+ *
+ * we need to fetch username from walletAddress by querying backend because this component may also be rendered directly on page load
+ * in that case, we get the walletAddress from logged-in user object and fetch the associated user from backend
+ */
+function WalletLinked(props: { address: string }) {
 	const { logout } = useLogout();
-
-	const usernameQuery = useQuery({
-		queryKey: ['username', props.address],
-		queryFn: async () => {
-			const res = await fetch(`${SERVER_URL}/user/get-user-data`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({ walletAddress: props.address }),
-			});
-			console.log(res);
-			const user = (await res.json()).user as UserData | undefined;
-			if (user) {
-				return user.username;
-			}
-			return null;
-		},
-	});
+	const userDataQuery = useGetUserDataForWalletAddress(props.address);
 
 	const handleLogout = async (event: React.MouseEvent) => {
 		event.preventDefault();
 		await logout();
-		props.onLogout();
 	};
 
 	return (
 		<div>
-			<FormTitle>{usernameQuery.data || ''}</FormTitle>
+			<FormTitle>{userDataQuery.data?.username || ''}</FormTitle>
 			<div className='h-3' />
 			<div className='flex justify-center'>
 				<Button variant='link' onClick={handleLogout} className='font-semibold'>
@@ -441,29 +468,30 @@ function FlagIcon(props: { size: number }) {
 	);
 }
 
-export function shortenAddress(str: string, extraShort: boolean = true) {
-	return `${str.substring(0, extraShort ? 4 : 6)}...${str.substring(
-		str.length - (extraShort ? 3 : 4)
-	)}`;
+function useGetUserDataForWalletAddress(walletAddress?: string) {
+	return useQuery({
+		queryKey: ['username', walletAddress],
+		queryFn: async () => {
+			if (!walletAddress) {
+				throw new Error('No wallet address provided');
+			}
+			return fetchUserData(walletAddress);
+		},
+		enabled: !!walletAddress,
+	});
 }
 
-function CustomConnectWallet() {
-	const connectionStatus = useConnectionStatus();
-	return (
-		<ConnectWallet
-			className={cn(
-				'!w-full !rounded-lg',
-				connectionStatus === 'disconnected' && '!font-decorative !text-2xl',
-				connectionStatus === 'connected' && '!border-[1.5px] '
-			)}
-			auth={{
-				loginOptional: true,
-			}}
-			theme={lightTheme({
-				colors: {
-					borderColor: 'var(--border)',
-				},
-			})}
-		/>
-	);
+export async function fetchUserData(walletAddress: string) {
+	const res = await fetch(`${SERVER_URL}/user/get-user-data`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify({ walletAddress: walletAddress }),
+	});
+	const user = (await res.json()).user as UserData | undefined;
+	if (user) {
+		return user;
+	}
+	return null;
 }
