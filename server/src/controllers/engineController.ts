@@ -6,7 +6,7 @@ import axios from "axios";
 import { userTokens } from "./userController";
 
 const ENGINE_URL = process.env.THIRDWEB_ENGINE_URL;
-const BACKEND_WALLET = "0x41252d22CdB26E3207689D077FB3c535FB57a133";
+const BACKEND_WALLET = process.env.THIRDWEB_ENGINE_BACKEND_WALLET;
 const ERC20_CONTRACT = "0x450b943729Ddba196Ab58b589Cea545551DF71CC";
 const CHAIN = 5;
 
