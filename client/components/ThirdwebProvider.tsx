@@ -1,6 +1,17 @@
 'use client';
 
-import { ThirdwebProvider } from '@thirdweb-dev/react';
+import {
+	ThirdwebProvider,
+	coinbaseWallet,
+	embeddedWallet,
+	metamaskWallet,
+	okxWallet,
+	phantomWallet,
+	rainbowWallet,
+	trustWallet,
+	walletConnect,
+	zerionWallet,
+} from '@thirdweb-dev/react';
 
 // This is the chainId your dApp will work on.
 const activeChain = 'goerli';
@@ -14,6 +25,17 @@ export function ConfiguredThirdwebProvider(props: { children: React.ReactNode })
 				domain: process.env.NEXT_PUBLIC_THIRDWEB_AUTH_DOMAIN || '',
 				authUrl: '/api/auth',
 			}}
+			supportedWallets={[
+				embeddedWallet(),
+				metamaskWallet(),
+				coinbaseWallet(),
+				walletConnect(),
+				trustWallet(),
+				rainbowWallet(),
+				zerionWallet(),
+				okxWallet(),
+				phantomWallet(),
+			]}
 		>
 			{props.children}
 		</ThirdwebProvider>

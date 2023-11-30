@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
 	useUser,
 	ConnectWallet,
 	useConnectionStatus,
 	useLogin,
-	lightTheme,
 	useLogout,
+	useDisconnect,
+	useWalletConfig,
 } from '@thirdweb-dev/react';
 import { Input } from '@/components/Input';
 import { Label } from './Label';
@@ -38,11 +39,7 @@ function CustomConnectWallet() {
 			auth={{
 				loginOptional: true,
 			}}
-			theme={lightTheme({
-				colors: {
-					borderColor: 'var(--border)',
-				},
-			})}
+			theme={'light'}
 		/>
 	);
 }
@@ -58,18 +55,29 @@ export function LoginForm() {
 	const { user, isLoading } = useUser();
 	const userDataQuery = useGetUserDataForWalletAddress(user?.address);
 	const userDataLoading = userDataQuery.isLoading;
-	const userDataAddress = userDataQuery.data?.ethAddress;
+	const userDataInfo = userDataQuery.data;
 
+	const done = useRef(false);
 	useEffect(() => {
+		if (done.current) {
+			return;
+		}
+
 		if (!isLoading) {
 			// if user is logged in
 			if (user) {
 				if (!userDataLoading) {
 					// if logged-in user's wallet is linked
-					if (userDataAddress) {
+					if (userDataInfo?.ethAddress) {
 						setScreen('wallet-linked');
+						done.current = true;
 					} else {
-						setScreen('link-wallet');
+						if (userDataInfo?.username) {
+							setScreen('link-wallet');
+						} else {
+							setScreen('main');
+						}
+						done.current = true;
 					}
 				}
 			}
@@ -77,9 +85,10 @@ export function LoginForm() {
 			// if user is not logged in
 			else {
 				setScreen('main');
+				done.current = true;
 			}
 		}
-	}, [user, isLoading, userDataLoading, userDataAddress]);
+	}, [user, isLoading, userDataLoading, userDataInfo]);
 
 	return (
 		<form
@@ -112,18 +121,31 @@ export function LoginForm() {
 							<LoginOrSignupForm
 								username={username}
 								setUsername={setUsername}
-								onNext={() => {
+								onSubmit={() => {
 									setScreen('link-wallet');
 								}}
 							/>
 						)}
 
 						{screen === 'link-wallet' && (
-							<LinkWallet onBack={() => setScreen('main')} username={username} />
+							<LinkWallet
+								onBack={() => setScreen('main')}
+								username={username}
+								onLinked={() => setScreen('wallet-linked')}
+							/>
 						)}
 
-						{screen === 'wallet-linked' && userDataAddress && (
-							<WalletLinked address={userDataAddress} />
+						{screen === 'wallet-linked' && userDataInfo?.ethAddress && (
+							<WalletLinked
+								address={userDataInfo?.ethAddress}
+								onRelink={() => {
+									console.log('relink');
+									setScreen('link-wallet');
+								}}
+								onLogout={() => {
+									setScreen('main');
+								}}
+							/>
 						)}
 					</div>
 				)}
@@ -138,7 +160,7 @@ export function LoginForm() {
 function LoginOrSignupForm(props: {
 	username: string;
 	setUsername: (username: string) => void;
-	onNext: () => void;
+	onSubmit: () => void;
 }) {
 	const [password, setPassword] = useState('');
 	const [loginMode, setLoginMode] = useState<'login' | 'signup'>('signup');
@@ -160,7 +182,7 @@ function LoginOrSignupForm(props: {
 				throw new Error(data.message || 'Something went wrong during login/registration.');
 			}
 			// setUserMessage(data.message);
-			props.onNext();
+			props.onSubmit();
 		} catch (error: any) {
 			setStatus({ error: error.message });
 		}
@@ -186,7 +208,7 @@ function LoginOrSignupForm(props: {
 			}
 
 			// setUserMessage('Registration successful! You may now log in.');
-			props.onNext();
+			props.onSubmit();
 		} catch (error: any) {
 			setStatus({ error: error.message });
 			// setUserMessage(error.message);
@@ -282,10 +304,13 @@ function LoginOrSignupForm(props: {
 /**
  * link wallet to given username
  */
-function LinkWallet(props: { onBack: () => void; username: string }) {
-	const { isLoading: loginLoading, login } = useLogin();
+function LinkWallet(props: { onBack: () => void; username: string; onLinked: () => void }) {
+	const { login } = useLogin();
+	const [isLinking, setIsLinking] = useState(false);
 	const { username } = props;
 	const connectionStatus = useConnectionStatus();
+	const walletConfig = useWalletConfig();
+	const requiresSignatureApproval = !walletConfig?.isHeadless;
 
 	const handleLinkWallet = async (token: string) => {
 		try {
@@ -298,7 +323,9 @@ function LinkWallet(props: { onBack: () => void; username: string }) {
 				},
 				body: JSON.stringify({ username }),
 			});
+			console.log({ res });
 			const data = await res.json();
+			console.log({ data });
 			if (!res.ok) {
 				throw new Error(data.message || 'Something went wrong while linking the wallet.');
 			}
@@ -347,22 +374,36 @@ function LinkWallet(props: { onBack: () => void; username: string }) {
 					<Button
 						className='w-full'
 						onClick={async () => {
-							const token = await login();
-							if (typeof token === 'string') {
-								await handleLinkWallet(token);
-							} else {
-								console.error('Token is not a string');
-								console.log(token);
+							setIsLinking(true);
+							try {
+								const token = await login();
+								if (typeof token === 'string') {
+									await handleLinkWallet(token);
+									props.onLinked();
+								} else {
+									console.error('Token is not a string');
+									console.log(token);
+								}
+							} catch (e) {
+								console.error(e);
 							}
+
+							setIsLinking(false);
 						}}
 					>
-						{loginLoading ? (
+						{isLinking ? (
 							<Spinner className='h-6 w-6' />
 						) : (
 							<Link2Icon className='h-6 w-6 rotate-90' />
 						)}
-						{loginLoading ? 'Linking Wallet' : 'Link Wallet'}
+						{isLinking ? 'Linking Wallet' : 'Link Wallet'}
 					</Button>
+
+					{isLinking && requiresSignatureApproval && (
+						<p className='my-5 text-center font-semibold'>
+							Please approve signature request in your wallet
+						</p>
+					)}
 				</>
 			)}
 
@@ -381,13 +422,15 @@ function LinkWallet(props: { onBack: () => void; username: string }) {
  * we need to fetch username from walletAddress by querying backend because this component may also be rendered directly on page load
  * in that case, we get the walletAddress from logged-in user object and fetch the associated user from backend
  */
-function WalletLinked(props: { address: string }) {
+function WalletLinked(props: { address: string; onRelink: () => void; onLogout: () => void }) {
 	const { logout } = useLogout();
 	const userDataQuery = useGetUserDataForWalletAddress(props.address);
+	const disconnect = useDisconnect();
 
 	const handleLogout = async (event: React.MouseEvent) => {
 		event.preventDefault();
 		await logout();
+		props.onLogout();
 	};
 
 	return (
@@ -405,6 +448,18 @@ function WalletLinked(props: { address: string }) {
 			<p className='rounded-lg border-[1.5px] p-4 text-center font-decorative text-xl'>
 				{props.address}
 			</p>
+
+			<div className='h-5' />
+
+			<Button
+				onClick={() => {
+					disconnect();
+					props.onRelink();
+				}}
+				className='w-full font-semibold'
+			>
+				Relink New Wallet
+			</Button>
 		</div>
 	);
 }
