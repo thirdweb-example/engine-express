@@ -9,7 +9,7 @@ import Image from 'next/image';
 export default function Page() {
 	return (
 		<main
-			className='container relative'
+			className='container relative px-0'
 			style={{
 				maxWidth: '2000px',
 			}}
@@ -25,15 +25,17 @@ export default function Page() {
 				src={peopleImage}
 				alt=''
 				aria-hidden
-				className='absolute bottom-0 right-0 -z-10 w-[45%]'
+				className='absolute bottom-0 right-0 -z-10 hidden xl:block xl:w-[45%]'
 				height={850}
 			/>
 
 			<div className='container relative z-10 min-h-screen py-10'>
 				<span className='font-decorative text-4xl tracking-wide text-accent-600'>By thirdweb</span>
-				<h1 className='font-decorative text-[150px] leading-none'>SPEED RACER.</h1>
+				<h1 className='font-decorative text-7xl leading-none lg:text-[150px]'>SPEED RACER.</h1>
 				<div className='h-10' />
-				<LoginForm />
+				<div className='flex justify-center xl:justify-start'>
+					<LoginForm />
+				</div>
 			</div>
 		</main>
 	);

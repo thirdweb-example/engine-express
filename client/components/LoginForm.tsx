@@ -84,7 +84,7 @@ export function LoginForm() {
 	return (
 		<form
 			autoComplete='off'
-			className='rounded-[14px] border-[1.5px] bg-b-100 shadow-lg'
+			className='w-full rounded-[14px] border-[1.5px] bg-b-100 shadow-lg'
 			style={{
 				maxWidth: '480px',
 			}}
@@ -103,7 +103,7 @@ export function LoginForm() {
 						<Spinner className='h-10 w-10' />
 					</div>
 				) : (
-					<div className='p-8'>
+					<div className='p-7'>
 						<div className='mb-4 flex justify-center text-accent-500'>
 							<FormIcon size={70} />
 						</div>
