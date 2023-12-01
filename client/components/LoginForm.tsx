@@ -10,6 +10,7 @@ import {
   useLogout,
   useDisconnect,
   useWalletConfig,
+  shortenAddress,
 } from "@thirdweb-dev/react";
 import { Input } from "@/components/Input";
 import { Label } from "./Label";
@@ -20,9 +21,13 @@ import {
   ArrowDownIcon,
   UserIcon,
   Link2Icon,
+  CopyIcon,
+  CheckIcon,
 } from "lucide-react";
 import { Spinner } from "./Spinner/Spinner";
 import { cn } from "@/lib/utils";
+import peopleImage from "../app/_assets/people.png";
+import Image from "next/image";
 
 const SERVER_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -45,6 +50,18 @@ function CustomConnectWallet() {
         loginOptional: true,
       }}
       theme={"light"}
+      welcomeScreen={() => {
+        return (
+          <div className="relative h-full px-4 py-5">
+            <Image
+              src={peopleImage}
+              alt=""
+              aria-hidden
+              className="absolute bottom-0 right-0"
+            />
+          </div>
+        );
+      }}
     />
   );
 }
@@ -481,9 +498,7 @@ function WalletLinked(props: {
 
       <div className="h-10" />
 
-      <p className="rounded-lg border-[1.5px] p-4 text-center font-decorative text-xl">
-        {props.address}
-      </p>
+      <CopyAddressButton address={props.address} />
 
       <div className="h-5" />
 
@@ -585,4 +600,29 @@ export async function fetchUserData(walletAddress: string) {
     return user;
   }
   return null;
+}
+
+function CopyAddressButton(props: { address: string }) {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <Button
+      variant="link"
+      className="container flex w-full items-center justify-center gap-2 border-[1.5px] !p-3 text-lg font-semibold text-f-900"
+      onClick={() => {
+        navigator.clipboard.writeText(props.address);
+        setCopied(true);
+        setTimeout(() => {
+          setCopied(false);
+        }, 2000);
+      }}
+    >
+      {shortenAddress(props.address)}
+      {copied ? (
+        <CheckIcon className="h-5 w-5" />
+      ) : (
+        <CopyIcon className={cn("h-5 w-5")} />
+      )}
+    </Button>
+  );
 }
