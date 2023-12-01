@@ -7,8 +7,8 @@ import { userTokens } from "./userController";
 
 const ENGINE_URL = process.env.THIRDWEB_ENGINE_URL;
 const BACKEND_WALLET = process.env.THIRDWEB_ENGINE_BACKEND_WALLET;
-const ERC20_CONTRACT = "0x450b943729Ddba196Ab58b589Cea545551DF71CC";
-const CHAIN = 5;
+const ERC20_CONTRACT = "0x9720Af115d20cD21845c7D85fd555C9711678000";
+const CHAIN = 421614;
 
 export const claimERC20 = async (req: Request, res: Response) => {
   const { authToken } = req.body;
