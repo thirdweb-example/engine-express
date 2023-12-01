@@ -13,7 +13,7 @@ import {
 } from "@thirdweb-dev/react";
 
 // This is the chainId your dApp will work on.
-const activeChain = "goerli";
+const activeChain = "arbitrum-sepolia";
 
 export function ConfiguredThirdwebProvider(props: {
   children: React.ReactNode;

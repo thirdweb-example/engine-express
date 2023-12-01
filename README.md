@@ -10,7 +10,7 @@ Here’s an overview of the overall architecture for this example:
 
 ## Demo
 
-You can try out our live [Speed Racer](placeholder) demo to see all parts working together, it is deployed on goerli.
+You can try out our live [Speed Racer](placeholder) demo to see all parts working together, it is deployed on arbitrum-sepolia.
 
 ## Setting up Engine
 
@@ -27,7 +27,7 @@ We’ll need a website for users to sign up and link their wallets, and a backen
 Here’s a step by step guide to deploy your client/server:
 
 1. Clone https://github.com/thirdweb-example/engine-express/
-2. Install client dependencies `cd client` and `yarn` 
+2. Install client dependencies `cd client` and `yarn`
 3. Install server dependencies `cd server` and `yarn`
 4. Head back into the root folder and `yarn`
 5. Replace the `.env.example` in the client/server folders with your own [api key](http://thirdweb.com/create-api-key) values and engine url - make sure your api key can be used to authenticate with your deployed engine
@@ -37,7 +37,7 @@ Here’s a step by step guide to deploy your client/server:
 
 ## Setting up Unreal Engine
 
-This part is simple, we have a template for you with a simple script to interact with your server as per the architecture above. A level blueprint instantiates the UI, which has its own blueprint to interact with your server. 
+This part is simple, we have a template for you with a simple script to interact with your server as per the architecture above. A level blueprint instantiates the UI, which has its own blueprint to interact with your server.
 
 Go ahead and clone https://github.com/thirdweb-example/unreal_demo and head to `_Thirdweb/Scenes/Scene_Game` and start the level.
 
