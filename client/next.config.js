@@ -1,3 +1,6 @@
+const dotenv = require("dotenv");
+dotenv.config();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -5,10 +8,11 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "http://localhost:8000/:path*", // Proxy to Backend
+        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/:path*`, // Proxy to Backend
       },
     ];
   },
 };
 
 module.exports = nextConfig;
+
