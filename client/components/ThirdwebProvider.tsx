@@ -12,8 +12,10 @@ import {
   zerionWallet,
 } from "@thirdweb-dev/react";
 
+import { ArbitrumSepolia } from "@thirdweb-dev/chains";
+
 // This is the chainId your dApp will work on.
-const activeChain = "arbitrum-sepolia";
+const activeChain = ArbitrumSepolia;
 
 export function ConfiguredThirdwebProvider(props: {
   children: React.ReactNode;
