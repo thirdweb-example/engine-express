@@ -12,6 +12,8 @@ Here’s an overview of the overall architecture for this example:
 
 You can try out our live Speed Racer demo to see all parts working together, it is deployed on arbitrum-sepolia.
 
+:warning: This is not a production ready app, it uses an in-memory db to demonstrate the architecture, do not use a password you've used before.
+
 [Download Speed Racer for Windows](https://www.dropbox.com/scl/fi/h7lc0wf85ww8u1mrfidjk/SpeedRacer_Win64.zip?rlkey=6tsmk0wvwlpwc63tdxayxmrrj&dl=0)
 
 [Download Speed Racer for Mac](https://www.dropbox.com/scl/fi/2n3m59u8bsv3tavanafb7/SpeedRacer_Mac.zip?rlkey=16iaw3g8z8iwogku0bsqwakeo&dl=0)
