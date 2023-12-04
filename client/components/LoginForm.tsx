@@ -500,13 +500,19 @@ function WalletLinked(props: {
 
       <CopyAddressButton address={props.address} />
 
-      <div className="h-5" />
+      <div className="h-10" />
 
+      <p className="text-center text-lg font-semibold">
+        Your wallet is linked to your username <br /> You can return to the game
+      </p>
+
+      <div className="h-10" />
       <Button
         onClick={() => {
           disconnect();
           props.onRelink();
         }}
+        variant="link"
         className="w-full font-semibold"
       >
         Relink New Wallet
